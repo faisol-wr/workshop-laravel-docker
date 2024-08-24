@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  #Mysl Service
+  db:
+    image: mysql:8
+    container_name: laravel_mysql
+    volumes:
+      - ./mysql/:/var/lib/mysql/
+    environment:
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_DATABASE=laraveldb
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=1234
+    restart: always
+    networks:
+      - web_network
+
+  #Laravel App
+  app:
+    build:
+      args:
+        user: wr
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel_app
+    restart: always
+    volumes:
+      - ./application/:/var/www/
+    expose:
+      - "9000"
+    networks:
+      - web_network
+    
+  #Nginx Service
+  nginx:
+    image: nginx:stable-alpine
+    container_name: laravel_nginx
+    volumes:
+      - ./application/:/var/www
+      - ./nginx/conf/nginx.conf:/etc/nginx/conf/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - "8989:80"
+    restart: always
+    networks:
+      - web_network
+      
+networks:
+  web_network:
+    name: laravel
+    driver: bridge
